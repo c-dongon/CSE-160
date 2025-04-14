@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Draw a point (1)</title>
+  </head>
+
+  <body onload="main()">
+    <canvas id="webgl" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+    <p>
+      Red: <input type="range" min="0" max="100" value="100" id="rSlider">
+      Green: <input type="range" min="0" max="100" value="100" id="gSlider">
+      Blue: <input type="range" min="0" max="100" value="100" id="bSlider">
+    </p>
+
+    <p>
+      Size: <input type="range" min="1" max="40" value="10" id="sizeSlider">
+    </p>
+
+    <button onclick="clearCanvas()">Clear Canvas</button>
+
+    <p>
+      Drawing Shapes:
+      <button onclick="setShapeType('point')">Square</button>
+      <button onclick="setShapeType('triangle')">Triangle</button>
+      <button onclick="setShapeType('circle')">Circle</button>
+    </p>
+
+    <p>
+      Circle Segments: <input type="range" min="3" max="100" value="10" id="segmentSlider" oninput="this.nextElementSibling.value = this.value">
+    </p>
+
+    <p>
+      <button onclick="drawFlower()">Draw a Flower!</button>
+    </p>
+
+    <p>Reference Flower Drawing</p>
+    <img src="../flowerdrawing.jpg" style="width:500px;height:600px;">
+    
+    <script src="../lib/webgl-utils.js"></script>
+    <script src="../lib/webgl-debug.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="ColoredPoints.js"></script>
+  </body>
+</html>
