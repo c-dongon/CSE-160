@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Blocky Spider</title>
+    <style>
+      canvas {
+        border: 3px dotted rgb(115, 76, 255);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="webgl" width="640" height="480"></canvas>
+    <div id="fpsCounter" style="position: absolute; top: 15px; left: 15px; color: black">
+      FPS: 0
+    </div>    
+    <br />
+
+    Yaw: <input type="range" id="yawSlider" min="-180" max="180" value="0"><br>
+    Pitch: <input type="range" id="pitchSlider" min="-180" max="180" value="0"><br>
+    Roll: <input type="range" id="rollSlider" min="-180" max="180" value="0"><br>
+    
+    <p>
+      Left: Upper Leg Rotation: <input type="range" id="upperLegSlider" min="-90" max="90" value="0">
+    </p>
+    <p>
+      Left: Lower Leg Rotation: <input type="range" id="lowerLegSlider" min="-90" max="90" value="0">
+    </p>
+        <p>
+      Right: Upper Leg Rotation: <input type="range" id="upperLegSliderR" min="-90" max="90" value="0">
+    </p>
+    <p>
+      Right: Lower Leg Rotation: <input type="range" id="lowerLegSliderR" min="-90" max="90" value="0">
+    </p>
+    <button onclick="toggleAnimation()">Toggle Walk</button>
+    <label>
+      <input type="checkbox" id="hatCheckbox">
+      Toggle Dapper
+    </label>
+    
+    <p>
+      shift + click for surprise
+    </p>
+
+    <!-- scripts -->
+    <script id="vertex-shader" type="x-shader/x-vertex">
+      attribute vec4 a_Position;
+      uniform mat4 u_ModelMatrix;
+      uniform mat4 u_GlobalRotation;
+      void main() {
+        gl_Position = u_GlobalRotation * u_ModelMatrix * a_Position;
+      }
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
+      precision mediump float;
+      uniform vec4 u_FragColor;
+      void main() {
+        gl_FragColor = u_FragColor;
+      }
+    </script>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script src="../lib/cuon-utils.js"></script>
+    <script src="asgn2.js"></script>
+  </body>
+</html>
