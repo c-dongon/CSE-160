@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blocky World</title>
+  <style>
+    html, body {
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+    <div id="game-over" 
+    style="
+        position: absolute;
+        top: 40%;
+        width: 100%;
+        text-align: center;
+        font-size: 48px;
+        color: red;
+        font-family: sans-serif;
+        display: none;
+        ">
+        Game Over!
+    </div>
+        <div id="you-win" 
+    style="
+        position: absolute;
+        top: 40%;
+        width: 100%;
+        text-align: center;
+        font-size: 48px;
+        color: rgb(4, 255, 0);
+        font-family: sans-serif;
+        display: none;
+        ">
+        You're Winner!
+    </div>
+    <canvas id="webgl-canvas"></canvas>
+    <div id="controls-text" style="
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-family: monospace;
+        font-size: 16px;
+        background-color: rgba(0,0,0,0.5);
+        padding: 8px 12px;
+        border-radius: 6px;
+        max-width: 280px;
+        line-height: 1.4;
+        z-index: 5;
+        ">
+        W/A/S/D - Move<br>
+        Mouse - Look<br>
+        Left Click - Remove Block<br>
+        Right Click - Place Block<br>
+        <span style="color:rgb(255, 18, 18)">Try not to get caught by the evil cubes!<br></span>
+        <span style="color:rgb(0, 255, 13)">Collect all yellow cubes to win!<br></span>
+    </div>
+    <script src="../lib/cuon-matrix.js"></script>
+    <script type="module" src="./main.js"></script>
+</body>
+</html>
