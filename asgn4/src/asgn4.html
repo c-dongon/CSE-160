@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Lighting</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="webgl" width="600" height="600"></canvas>
+    <div>
+      <button id="toggleNormals">Toggle Normals</button>
+      <button id="toggleLighting">Toggle Lighting</button>
+      <button id="toggleLightType">Toggle Light Type</button>
+    </div>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+      attribute vec4 a_Position;
+      attribute vec3 a_Normal;
+
+      uniform mat4 u_ModelMatrix;
+      uniform mat4 u_ViewMatrix;
+      uniform mat4 u_ProjMatrix;
+      uniform mat4 u_NormalMatrix;
+      uniform vec3 u_LightPos;
+
+      varying vec3 v_NormalDir;
+      varying vec3 v_LightDir;
+      varying vec3 v_ViewDir;
+
+      void main() {
+        vec4 worldPos = u_ModelMatrix * a_Position;
+        vec3 normalWorld = normalize(mat3(u_NormalMatrix) * a_Normal);
+        vec3 lightVec = u_LightPos - vec3(worldPos);
+        vec3 viewVec = -vec3(worldPos);
+
+        v_NormalDir = normalWorld;
+        v_LightDir = lightVec;
+        v_ViewDir = viewVec;
+
+        gl_Position = u_ProjMatrix * u_ViewMatrix * worldPos;
+      }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec3 v_NormalDir;
+    varying vec3 v_LightDir;
+    varying vec3 v_ViewDir;
+
+    uniform bool u_ShowNormals;
+    uniform bool u_LightingOn;
+    uniform bool u_UseSpotlight;
+
+    uniform vec3 u_LightColor;
+    uniform vec3 u_SpotDirection;
+    uniform float u_SpotCutoff;
+
+
+      void main() {
+        vec3 norm = normalize(v_NormalDir);
+        vec3 lightDir = normalize(v_LightDir);
+        vec3 viewDir = normalize(v_ViewDir);
+
+        vec3 objectColor = u_ShowNormals ? norm * 0.5 + 0.5 : vec3(1.0, 1.0, 1.0);
+        vec3 color;
+
+        if (u_LightingOn) {
+          vec3 ambient = 0.2 * u_LightColor;
+
+          float diff = max(dot(norm, lightDir), 0.0);
+          vec3 diffuse = diff * u_LightColor;
+
+          vec3 specular = vec3(0.0);
+          if (diff > 0.0) {
+            vec3 reflectDir = reflect(-lightDir, norm);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 16.0);
+            specular = 0.5 * spec * u_LightColor;
+          }
+
+          if (u_UseSpotlight) {
+            vec3 spotDir = normalize(u_SpotDirection);
+            vec3 lightDirNorm = normalize(v_LightDir);
+            float theta = dot(-lightDirNorm, spotDir);
+            float epsilon = 0.05;
+            float cutoff = u_SpotCutoff;
+            float intensity = smoothstep(cutoff, cutoff + epsilon, theta);
+
+            diffuse *= intensity;
+            specular *= intensity;
+          }
+
+          color = ambient + diffuse + specular;
+        } else {
+          color = vec3(1.0);
+        }
+
+        gl_FragColor = vec4(objectColor * color, 1.0);
+      }
+    </script>
+    <div>
+      Light Y Position: <input type="range" id="lightY" min="-2" max="2" step="0.1" value="1.5">
+    </div>
+    <div>
+      Light Color: <input type="color" id="lightColor" value="#ffffff">
+    </div>
+    <script type="module" src="./asgn4.js"></script>
+  </body>
+</html>
