@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Three.js</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.149.0/examples/jsm/"
+        }
+      }
+    </script>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from 'three';
+      import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+      import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 10, 25);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      const textureLoader = new THREE.TextureLoader();
+
+      // skybox
+      function loadSkybox(prefix) {
+        const sides = ['right', 'left', 'up', 'down', 'front', 'back'];
+        const materials = sides.map(side =>
+          new THREE.MeshBasicMaterial({
+            map: textureLoader.load(`./images/${prefix}_${side}.png`),
+            side: THREE.BackSide,
+            depthWrite: false,
+            transparent: true,
+            opacity: prefix === 'Sunny' ? 1 : 0
+          })
+        );
+        return new THREE.Mesh(new THREE.BoxGeometry(500, 500, 500), materials);
+      }
+
+      const daySkybox = loadSkybox('Sunny');
+      const nightSkybox = loadSkybox('Space');
+      scene.add(daySkybox);
+      scene.add(nightSkybox);
+
+      // lights
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(5, 10, 7.5);
+      scene.add(directionalLight);
+
+      const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+      scene.add(ambientLight);
+
+      const pointLight = new THREE.PointLight(0xffaa00, 1, 50);
+      pointLight.position.set(-5, 5, 5);
+      scene.add(pointLight);
+
+      const hemisphereLight = new THREE.HemisphereLight(0x87ceeb, 0x222222, 0.5);
+      hemisphereLight.position.set(0, 10, 0);
+      scene.add(hemisphereLight);
+
+      // materials
+      const wallTexture = textureLoader.load('https://threejs.org/manual/examples/resources/images/wall.jpg');
+      const texturedMaterial = new THREE.MeshStandardMaterial({ map: wallTexture });
+      const basicMaterial = new THREE.MeshStandardMaterial({ color: 0x6699ff });
+      const altMaterial = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
+
+      // shapes
+      const shapes = [];
+      const shapeCount = 24;
+      const spacing = 4;
+      const types = ['cube', 'sphere', 'cylinder'];
+
+      for (let i = 0; i < shapeCount; i++) {
+        const type = types[i % types.length];
+        let geometry;
+        switch (type) {
+          case 'sphere': geometry = new THREE.SphereGeometry(1, 32, 32); break;
+          case 'cylinder': geometry = new THREE.CylinderGeometry(1, 1, 2, 32); break;
+          default: geometry = new THREE.BoxGeometry(2, 2, 2); break;
+        }
+
+        const useTexture = i % 5 === 0;
+        const mat = useTexture ? texturedMaterial : (i % 2 === 0 ? basicMaterial : altMaterial);
+        const mesh = new THREE.Mesh(geometry, mat);
+
+        const row = Math.floor(i / 6);
+        const col = i % 6;
+        mesh.position.set((col - 3) * spacing, 0, (row - 2) * spacing);
+
+        scene.add(mesh);
+        shapes.push(mesh);
+      }
+
+      const rotating = shapes.slice(0, 6);
+
+      // gltf model
+      const gltfLoader = new GLTFLoader();
+      gltfLoader.load(
+        'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
+        gltf => {
+          const model = gltf.scene;
+          model.scale.set(5, 5, 5);
+          model.position.set(17, 3, 0);
+          scene.add(model);
+        },
+        undefined,
+        error => console.error('GLTF load error:', error)
+      );
+
+      let fadeClock = new THREE.Clock();
+      const fadeDuration = 10;
+
+      const dayLightColor = new THREE.Color(0xfff2cc); 
+      const nightLightColor = new THREE.Color(0x224477);
+
+      let currentDirIntensity = directionalLight.intensity;
+      let currentAmbIntensity = ambientLight.intensity;
+      let currentLightColor = directionalLight.color.clone();
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const t = fadeClock.getElapsedTime();
+        const cycle = (Math.sin((t / fadeDuration) * Math.PI * 2) + 1) / 2;
+
+        daySkybox.material.forEach(m => m.opacity = cycle);
+        nightSkybox.material.forEach(m => m.opacity = 1 - cycle);
+
+        const targetDirIntensity = 0.05 + 1.45 * cycle;
+        const targetAmbIntensity = 0.05 + 0.5 * cycle;
+
+        currentDirIntensity += (targetDirIntensity - currentDirIntensity) * 0.05;
+        currentAmbIntensity += (targetAmbIntensity - currentAmbIntensity) * 0.05;
+
+        directionalLight.intensity = currentDirIntensity;
+        ambientLight.intensity = currentAmbIntensity;
+
+        const targetColor = new THREE.Color().lerpColors(nightLightColor, dayLightColor, cycle);
+        currentLightColor.lerp(targetColor, 0.05);
+        directionalLight.color.copy(currentLightColor);
+
+        rotating.forEach(obj => {
+          obj.rotation.y += 0.01;
+          obj.rotation.x += 0.005;
+        });
+
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
